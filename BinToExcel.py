@@ -73,13 +73,14 @@ def CheckExcelData(TotalRows, xlApp):
 			break
 		RowIndex=RowIndex+1
 
-GetArray=BitArray(bytes=file(FileName, 'rb').read()[0:])
+
 OpenFile=open(FileName, 'rb')
 ReadFile=OpenFile.read();
-for element in ReadFile:
+GetArray=BitArray(OpenFile,length=256)  #thanks 93mowmow give feedback: Add a hexfile.bin for testing.
+for element in ReadFile: 
 	GetString = GetString+bin(int(hex(ord(element)), 16))[2:].zfill(8)
 
-GenerateExcel(MainPath, TemplateExcel, "GetString", GetString, OutputExcel)
+GenerateExcel(MainPath, TemplateExcel, "GetArray", GetArray, OutputExcel)
 
 
 
