@@ -12,30 +12,11 @@ from bitstring import BitArray, BitStream
 FileName = "hexfile.bin" 
 TemplateExcel = "BinToExcel_template.xls"
 OutputExcel = "BinToExcel_result.xls"
-MainPath = "c:" + os.sep + "python27" + os.sep   #change folder to c:\python27
+MainPath = os.getcwd()  #use getcwd
 GetString=""
 GetArray=[]
 
-#functions
-def GenerateExcel(path, template, data, newfile):
-	#get the path folder to find the excel template. 
-	#Using the data to fill up the excel to save as the new name from newfile
-	xlApp = win32com.client.Dispatch("Excel.Application")
-	workbook=xlApp.Workbooks.Open(os.path.join(path, template))
-	RowIndex = 2
-	CurrentBit = 0
-	BitRange = 0
-	while(CurrentBit<int(len(data))):
-		BitRange = int(xlApp.Range("B"+str(RowIndex),"B"+str(RowIndex)).Value)
-		xlApp.Range("C"+str(RowIndex),"C"+str(RowIndex)).Value = data[CurrentBit:CurrentBit+BitRange].bin
-		CurrentBit = CurrentBit + BitRange	
-		RowIndex=RowIndex+1
-	CheckExcelData(int(len(data)), xlApp)
-	workbook.SaveAs(os.path.join(path, newfile))
-	xlApp.DisplayAlerts = 0
-	xlApp.Visible = 0
-	workbook.Close(0)
-	
+#functions	
 def GenerateExcel(path, template, source_type, data, newfile):
 	#get the path folder to find the excel template. 
 	#Using the data to fill up the excel to save as the new name from "newfile"
