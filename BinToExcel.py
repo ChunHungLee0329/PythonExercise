@@ -12,7 +12,9 @@ from bitstring import BitArray, BitStream
 FileName = "hexfile.bin" 
 TemplateExcel = "BinToExcel_template.xls"
 OutputExcel = "BinToExcel_result.xls"
-MainPath = "c:" + os.sep + "python27" + os.sep + "exercise" + os.sep + "BintoExcel" + os.sep
+MainPath = "c:" + os.sep + "python27" + os.sep   #change folder to c:\python27
+GetString=""
+GetArray=[]
 
 #functions
 def GenerateExcel(path, template, data, newfile):
@@ -33,7 +35,29 @@ def GenerateExcel(path, template, data, newfile):
 	xlApp.DisplayAlerts = 0
 	xlApp.Visible = 0
 	workbook.Close(0)
-
+	
+def GenerateExcel(path, template, source_type, data, newfile):
+	#get the path folder to find the excel template. 
+	#Using the data to fill up the excel to save as the new name from "newfile"
+	xlApp = win32com.client.Dispatch("Excel.Application")
+	workbook=xlApp.Workbooks.Open(os.path.join(path, template))
+	RowIndex = 2
+	CurrentBit = 0
+	BitRange = 0
+	while(CurrentBit<int(len(data))):
+		BitRange = int(xlApp.Range("B"+str(RowIndex),"B"+str(RowIndex)).Value)
+		if source_type=="GetArray":
+			xlApp.Range("C"+str(RowIndex),"C"+str(RowIndex)).Value = data[CurrentBit:CurrentBit+BitRange].bin
+		if source_type=="GetString":
+			xlApp.Range("C"+str(RowIndex),"C"+str(RowIndex)).Value = data[CurrentBit:CurrentBit+BitRange]			
+		CurrentBit = CurrentBit + BitRange	
+		RowIndex=RowIndex+1
+	CheckExcelData(int(len(data)), xlApp)
+	workbook.SaveAs(os.path.join(path, newfile))
+	xlApp.DisplayAlerts = 0
+	xlApp.Visible = 0
+	workbook.Close(0)
+	
 def CheckExcelData(TotalRows, xlApp):
 	#double check excel data
 	RowIndex = 1
@@ -49,4 +73,19 @@ def CheckExcelData(TotalRows, xlApp):
 			break
 		RowIndex=RowIndex+1
 
-GenerateExcel(MainPath, TemplateExcel, BitArray(bytes=file(FileName, 'rb').read()[0:]), OutputExcel)
+GetArray=BitArray(bytes=file(FileName, 'rb').read()[0:])
+OpenFile=open(FileName, 'rb')
+ReadFile=OpenFile.read();
+for element in ReadFile:
+	GetString = GetString+bin(int(hex(ord(element)), 16))[2:].zfill(8)
+
+GenerateExcel(MainPath, TemplateExcel, "GetString", GetString, OutputExcel)
+
+
+
+
+
+
+
+
+
