@@ -3,8 +3,8 @@
 
 strPlaitText="" 
 strCipherText=""
-intKey=3
 
+intKey=3
 def convert(strInput, intKey, strStart='a', n=26):
     temp = ord(strStart)
     offset = ((ord(strInput) - temp + intKey)%n)
