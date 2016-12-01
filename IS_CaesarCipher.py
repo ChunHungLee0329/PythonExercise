@@ -1,7 +1,7 @@
 #Caesar Cipher logic 
 #A=D, B=E, C=F...
 
-strPlaitText="" 
+strPlainText="" 
 strCipherText=""
 
 intKey=3
@@ -24,7 +24,7 @@ def caesarEncode(strInput, intKey):
 def caesarDecode(strInput, intKey):
 	return caesarEncode(strInput, -intKey)
 
-strPlaitText = "Neil (Chun-Hung) Lee"
-print "PlainText: %s" % strPlaitText
-print "Encrypt to CipherText(Caesar Cipher Encoding): %s" % caesarEncode(strPlaitText, intKey)
-print "Decrypt to PlainText(Caesar Cipher Decoding): %s" % caesarDecode(caesarEncode(strPlaitText, intKey), intKey)
+strPlainText = "Neil (Chun-Hung) Lee"
+print "PlainText: %s" % strPlainText
+print "Encrypt to CipherText(Caesar Cipher Encoding): %s" % caesarEncode(strPlainText, intKey)
+print "Decrypt to PlainText(Caesar Cipher Decoding): %s" % caesarDecode(caesarEncode(strPlainText, intKey), intKey)
