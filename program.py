@@ -14,18 +14,21 @@ from Tkinter import *
 import sys
 import os
 import binExcelConverter as BEC
+import menu_new as M_new
 import menu as M
 
 def main():	
 
 	help = "sample command for you: python program.py C:\a.bin C:\b.xls"
-	if(len(sys.argv) == 1):
-		print ""
-		#myMenu = M.MainMenu(Frame)
+	if(len(sys.argv) == 1):	
+		#root = Tk()
+		#myMenu = M_new.MainMenu(root)
+		myMenu = M.MainMenu()
+		
 	elif(len(sys.argv) == 3):
 		input = sys.argv[1] #get the parameter: inputPath
 		template = sys.argv[2] #get the parameter: outputPath
-		converter = BEC.BinExcelConverter(input, template) #assin an object from class BinExcelConverter
+		converter = BEC.BinExcelConverter(input, template) #assin an object to "converter" from class "BinExcelConverter"
 		if(not converter.volidateFileExtension()):#volidate file name extension
 			print converter.message()
 		elif(not converter.volidateConvertingItem()):#volidate converting item(BinToExcel/ExcelToBin)
