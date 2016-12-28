@@ -7,7 +7,11 @@
 作者:李俊鴻, Neil Lee
 時間:2016/12/26
 更新紀錄:
-	(1)Version 1.00: create class BinExcelConverter
+	=== Version 1.00 2016/12/26 update ===
+	(1)create class BinExcelConverter	
+	=== Version 1.01 2016/12/28 update ===
+	(1)add function "checkSetting()" to check/create program default folder
+	(2)add function "volidateVariable()" to check dummy data input
 '''
 
 import datetime
@@ -17,10 +21,15 @@ import binascii
 import bitstring
 import win32com.client
 import os
+import ConfigParser
 from bitstring import BitArray, BitStream
 from shutil import copyfile
 
+
+
+
 class BinExcelConverter:
+	
 	
 	def __init__(self, i, t):
 		self.i = i #inputPath
@@ -37,6 +46,30 @@ class BinExcelConverter:
 		self.tempFolder = os.getcwd() + "\\tempData\\" #tempFolder to process data
 		self.dataContent = "" #reading file to string from "readFileToString()"
 		self.resultPath = os.getcwd() + "\\resultData\\" #resultFolder to save file
+		self.logPath = os.getcwd() + "\\logData\\" #logFolder to save user log
+		self.checkSetting()
+		
+		
+	#check program default setting
+	def checkSetting(self):
+		config = ConfigParser.RawConfigParser()
+		config.read('Config.ini')
+		sectionDefaultFolder = config.items("DefaultSettingFolder")
+		for item in sectionDefaultFolder:
+			if not os.path.isdir(os.getcwd()+"\\"+item[1]):
+				os.mkdir(os.getcwd()+"\\"+item[1])
+
+	
+	#check the inputPath/templatePath missing text.
+	def volidateVariable(self):
+		if(len(self.i) == 0):
+			self.message += "miss data input: Source file path \n "
+			return False
+		elif(len(self.t) == 0):
+			self.message += "miss data input: Template file path \n "
+			return False
+		else:
+			return True
 	
 	#check the inputPath/templatePath match the supportFileExtension 
 	def volidateFileExtension(self):
@@ -49,7 +82,8 @@ class BinExcelConverter:
 				self.message += "system doesn't support: " + "." + self.i.split('.')[1] + "\n"
 			if(self.t.split('.')[1] not in self.supportFileExtension):
 				self.message += "system doesn't support: " + "." + self.t.split('.')[1] + "\n"
-			return False	
+			return False
+	
 	
 	#check the Data Converting request support or not
 	def volidateConvertingItem(self):
@@ -65,6 +99,7 @@ class BinExcelConverter:
 			self.convertingItem = ""			
 			return False
 	
+	
 	#check the inputPath/templatePath data exist or not
 	def volidateFilePath(self):
 		if(os.path.exists(self.i) and os.path.exists(self.t)): #validate inputFilePath/outputFilePath
@@ -76,14 +111,18 @@ class BinExcelConverter:
 				self.message += "system doesn't find the FilePath: " + self.t + "\n"
 			return False
 	
+	
 	#copy file to tempFolder:tempData
 	def copyAsTempData(self):
-		if(self.i == self.i): #copy inputFile into tempFolder(tempData) and reset self.i			
-			copyfile(self.i, self.tempFolder + self.i.split('\\')[-1])
-			self.i = self.tempFolder + self.i.split('\\')[-1]
-		if(self.t == self.t): #copy templateFile into tempFolder(tempData) and reset self.t			
-			copyfile(self.t, self.tempFolder + self.t.split('\\')[-1])
-			self.t = self.tempFolder + self.t.split('\\')[-1]
+		self.i = self.i.replace('/','\\')
+		self.t = self.t.replace('/','\\')
+		#copy inputFile into tempFolder(tempData) and reset self.i			
+		copyfile(self.i, self.tempFolder + self.i.split('\\')[-1])
+		self.i = self.tempFolder + self.i.split('\\')[-1]
+		#copy templateFile into tempFolder(tempData) and reset self.t			
+		copyfile(self.t, self.tempFolder + self.t.split('\\')[-1])
+		self.t = self.tempFolder + self.t.split('\\')[-1]
+	
 	
 	#read input File as a serial sequence of string value
 	def readFileToString(self):
@@ -105,6 +144,7 @@ class BinExcelConverter:
 			xlApp.Visible = 0
 			workbook.Close(0)
 	
+	
 	#main funciton:convert, getting "self.dataContent" to generate Bin/Excel file
 	def convert(self):
 		tempFile = self.t.split('\\')[-1]
@@ -117,6 +157,7 @@ class BinExcelConverter:
 		elif(self.convertingItem == "ExcelToBin"): #convert to Bin
 			self.excelToBin()
 		#self.deleteTempData()
+	
 	
 	def binToExcel(self):
 		xlApp = win32com.client.Dispatch("Excel.Application")
@@ -134,6 +175,7 @@ class BinExcelConverter:
 		xlApp.Visible = 0
 		workbook.Close(0)
 	
+	
 	def excelToBin(self):
 		#excel string to Array
 		self.readFile()
@@ -146,10 +188,19 @@ class BinExcelConverter:
 		with open(self.resultPath, 'wb') as f:
 			f.write(bytearray(int(i, 16) for i in HexArray))	
 	
+	
 	def deleteTempData(self):
 		print ""
 	
+	
 	#have a operation log and write into a text file
-	def log(self):
-		print "log"
+	def writeLog(self):
+		strDateTime = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+		fileName = "userLog_" + strDateTime + ".txt"
+		self.logPath = self.logPath + fileName
+		with open(self.logPath, 'wb') as f:
+			f.write(self.message)	
+	
+	
+	
 	
