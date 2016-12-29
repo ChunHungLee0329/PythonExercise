@@ -6,11 +6,16 @@
 功能:A class to show the ToolUserInterface
 作者:李俊鴻, Neil Lee
 時間:2016/12/28
-更新紀錄:
-	=== Version 1.00 2016/12/26 update ===
-	(1)create class MainMenu
+更新紀錄:(最新的在最上面)
+	=== Version 1.02 2016/12/29 update ===
+	(1)remove frameMessage in UI.
+	(2)"tkMessageBox" will have message.
 	=== Version 1.01 2016/12/28 update ===
 	(1)add function "writeLog()" to keep operation error message file log.
+	=== Version 1.00 2016/12/26 update ===
+	(1)create class MainMenu	
+作者筆記:
+	(1)login/logout function is pending.
 '''
 
 
@@ -32,7 +37,17 @@ class MainMenu(Tk):
 		self.root.geometry("500x350") #set Windows Size
 		self.frame = Frame(root) #top level: frame
 		self.menuBar = Menu(root) #create a default UI Menu object
-		self.createMenuItem() #loading MenuItem
+		
+		#self.createLoginWindow() #windows to login
+		self.createMenuItem() #loading MenuItem		
+		self.loginID = ""
+	
+	
+	def createLoginWindow(self):
+		#frmLogin = Toplevel()
+		#frmLogin.title("Login ID/Password...")
+		return False
+		
 	
 	
 	#create MenuItem: menuBar
@@ -44,7 +59,7 @@ class MainMenu(Tk):
 		#2.Menu: "Tool"		
 		self.menuTool = Menu(self.menuBar, tearoff=0)
 		#2.1 "Bin/Excel Converter"
-		self.menuTool.add_command(label="Bin/Excel Converter", command=self.eventChangeMenu_BinExcelConverter) 
+		self.menuTool.add_command(label="Bin/Excel Converter", command=self.eventChangeMenuItem_BinExcelConverter) 
 		self.menuBar.add_cascade(label="Tool", menu=self.menuTool)
 		
 		#3.Menu: "About"
@@ -59,6 +74,7 @@ class MainMenu(Tk):
 		
 		#show Menu elements
 		self.root.config(menu=self.menuBar)
+		self.frame.pack()
 		self.root.mainloop()
 
 	
@@ -68,13 +84,13 @@ class MainMenu(Tk):
 
 		
 	#select Menu: "Tool"->"Bin/Excel Converter"
-	def loadMenuChange(self):
+	def refreshMenuChange(self):
 		self.frame.grid_remove()
 	
 		
 	#eventChangeMenu: go to Menu "Tool" -> "Bin/Excel Converter"
-	def eventChangeMenu_BinExcelConverter(self):
-		#self.loadMenuChange()
+	def eventChangeMenuItem_BinExcelConverter(self):
+		#self.refreshMenuChange()
 		
 		#frameSource: a Frame layout to clone "inputPath section"
 		self.tempInput = StringVar() #string variable:"tempInput", assign value into "textInputPath"
@@ -92,13 +108,15 @@ class MainMenu(Tk):
 		self.textTemplatePath = Entry(self.frameTemplate, width=40, state="readonly", textvariable=self.tempTemplate).grid(row=0, column=1)
 		self.btnTemplate = Button(self.frameTemplate, text="Browse", width=8, command=lambda:self.tempTemplate.set(self.browseFilePath())).grid(row=0, column=2)
 		
+		'''
 		#frameMessage: a Frame layout to clone "Message section"
 		self.tempMessage = StringVar() #string variable:"tempMessage", assign value into "textMessage"
 		self.frameMessage = Frame(self.frame, pady=15)
 		self.frameMessage.pack(side=TOP, fill=X)		
 		self.lblMessage = Label(self.frameMessage, text="Message:", width=10).grid(row=0, column=0)
-		self.textMessage = Text(self.frameMessage, width=48, height=5).grid(row=0, column=1)
+		self.textMessage = Text(self.frameMessage, width=48, height=5, state='disabled').grid(row=0, column=1)
 		#self.textMessage = Listbox(self.frameMessage, bd=1, width=48, height=3).grid(row=0, column=1)
+		'''
 		
 		#frameConvert= a Frame layout to clone "Convert Button section"
 		self.frameConvert = Frame(self.frame, pady=5)
@@ -112,22 +130,24 @@ class MainMenu(Tk):
 	
 	#execute Data Convertion
 	def convert(self, input, template):
-		converter = BEC.BinExcelConverter(input, template)
-		if(not converter.volidateVariable()): #volidate if input/template missing
-			converter.writeLog() #testing for writeLog()
-			print converter.message
-			#self.textMessage.insert(END, converter.message)
-		elif(not converter.volidateFileExtension()):#volidate file name extension
-			print converter.message
-		elif(not converter.volidateConvertingItem()):#volidate converting item(BinToExcel/ExcelToBin)
-			print converter.message
-		elif(not converter.volidateFilePath()):#volidate file existence (inputPath/templatePath)
-			print converter.message
-		else:
-			converter.copyAsTempData()#copy data into folder=tempData (inputPath/templatePath)
-			converter.readFileToString()#read file data to a string
-			converter.convert()#start converting to a new file.
+		converter = BEC.BinExcelConverter(input, template)		
+		if(not converter.validationEncapsulation()):
+			converter.writeLog()
+			tkMessageBox.showinfo("Error", converter.message)
+		else:			
+			converter.convertingEncapsulation()#start converting to a new file.
+			tkMessageBox.showinfo("OK", converter.message)
+		
+	
+	def login(self):
+		print ""
 
+	def logout(self):
+		print ""
+		
+	
+
+	
 
 #default python menu_new.py to new an object from class "MainMenu()"
 if __name__ == '__main__':
