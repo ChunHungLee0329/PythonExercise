@@ -16,6 +16,8 @@
 	(1)create class MainMenu	
 作者筆記:
 	(1)login/logout function is pending.
+	(2)UI design/event change per eMow comment
+	(3)add the menu to load a "Config.ini" setting.
 '''
 
 
