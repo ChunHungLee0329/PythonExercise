@@ -12,13 +12,15 @@
 	(2)new function "validationEncapsulation()" to encapsulate validation process.
 	(3)new function "convertingEncapsulation()" to encapsulate convert process.
 	(4)enhance validation of mistake operation process, and add into error messag
+	(5)cowork eMow to find bug: "binToExcel()" failure root cause.
 	=== Version 1.01 2016/12/28 update ===
 	(1)add function "checkSetting()" to check/create program default folder
 	(2)add function "validateVariable()" to check dummy data input
 	=== Version 1.00 2016/12/26 update ===
 	(1)create class BinExcelConverter	
 作者筆記:
-	(1)login/logout function is pending.
+	(1)reading/write Excel column from loading Config.ini to decide which sheet/column
+	(2)wriet log needs enhancement, even apply "sqlite" and "Pandas"
 '''
 
 import datetime
@@ -213,7 +215,6 @@ class BinExcelConverter:
 	
 	def excelToBin(self):
 		#excel string to Array
-		self.readFile()
 		HexArray=[]
 		Index=0
 		while(Index<len(self.dataContent)):
@@ -240,6 +241,3 @@ class BinExcelConverter:
 	#system log in function
 	def login(self):
 		return True
-	
-
-	
