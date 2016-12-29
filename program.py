@@ -6,7 +6,7 @@
 功能:A Tool support data file converter. (Data Converter Tool.ppt)
 作者:李俊鴻, Neil Lee
 時間:2016/12/24
-更新紀錄:
+更新紀錄:(最新的在最上面)
 	=== Version 1.00 2016/12/26 update ===
 	(1)support BinToExcel/ExcelToBin
 	=== Version 1.01 2016/12/28 update ===
@@ -32,18 +32,12 @@ def main():
 		input = sys.argv[1] #get the parameter: inputPath
 		template = sys.argv[2] #get the parameter: outputPath
 		converter = BEC.BinExcelConverter(input, template) #assin an object to "converter" from class "BinExcelConverter"
-		if(not converter.volidateVariable()): #volidate if input/template missing
+		if(not converter.validationEncapsulation()):
+			converter.writeLog()
 			print converter.message
-		elif(not converter.volidateFileExtension()):#volidate file name extension
+		else:			
+			converter.convertingEncapsulation()#start converting to a new file.
 			print converter.message
-		elif(not converter.volidateConvertingItem()):#volidate converting item(BinToExcel/ExcelToBin)
-			print converter.message
-		elif(not converter.volidateFilePath()):#volidate file existence (inputPath/templatePath)
-			print converter.message
-		else:
-			converter.copyAsTempData()#copy data into folder=tempData (inputPath/templatePath)
-			converter.readFileToString()#read file data to a string
-			converter.convert()#start converting to a new file.
 	else:
 		print help
  
