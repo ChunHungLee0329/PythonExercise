@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
 
-''' æª”æ¡ˆè³‡è¨Š
-æª”å:program.py
-ç‰ˆæœ¬:version 2.00
-åŠŸèƒ½:A Tool support data file converter. (Data Converter Tool.ppt)
-ä½œè€…:æä¿Šé´», Neil Lee
-æ™‚é–“:2016/12/24
-æ›´æ–°ç´€éŒ„:(æœ€æ–°çš„åœ¨æœ€ä¸Šé¢)
-	=== Version 1.00 2016/12/26 update ===
-	(1)support BinToExcel/ExcelToBin
+''' ÀÉ®×¸ê°T
+ÀÉ¦W:program.py
+ª©¥»:version 2.00
+¥\¯à:A Tool support data file converter. (Data Converter Tool.ppt)
+§@ªÌ:§õ«TÂE, Neil Lee
+®É¶¡:2016/12/24
+§ó·s¬ö¿ı:(³Ì·sªº¦b³Ì¤W­±)
 	=== Version 1.01 2016/12/28 update ===
 	(1)add new Menu class "menu_new"
+	=== Version 1.00 2016/12/26 update ===
+	(1)support BinToExcel/ExcelToBin	
 '''
 
 from Tkinter import *
 import sys
 import os
-import BinExcelConverter as BEC
+import BinExcelConverter_final as BEC
 import menu_new as M_new
-import menu as M
+#import menu as M
 
 def main():	
 
