@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
-''' Ê™îÊ°àË≥áË®ä
-Ê™îÂêç:BinExcelConverter.py
-ÁâàÊú¨:version 1.00
-ÂäüËÉΩ:A class to process BinToExcel and ExcelToBin
-‰ΩúËÄÖ:Êùé‰øäÈ¥ª, Neil Lee
-ÊôÇÈñì:2016/12/26
-Êõ¥Êñ∞Á¥ÄÈåÑ:(ÊúÄÊñ∞ÁöÑÂú®ÊúÄ‰∏äÈù¢)
+''' ¿…Æ◊∏Í∞T
+¿…¶W:BinExcelConverter.py
+™©•ª:version 1.00
+•\Ø‡:A class to process BinToExcel and ExcelToBin
+ß@™Ã:ßı´T¬E, Neil Lee
+Æ…∂°:2016/12/26
+ßÛ∑s¨ˆø˝:(≥Ã∑s™∫¶b≥Ã§W≠±)
+	=== Version 1.03 2017/1/4 updae ===
+	(1)replace class file from "BinExcelConverter.py" to "BinExcelConverter_final.py"
+	(2)add config dynamic function to determine excel column.
 	=== Version 1.02 2016/12/29 update ===
 	(1)modify "writeLog()" to have success & failed message.	
 	(2)new function "validationEncapsulation()" to encapsulate validation process.
@@ -18,7 +21,7 @@
 	(2)add function "validateVariable()" to check dummy data input
 	=== Version 1.00 2016/12/26 update ===
 	(1)create class BinExcelConverter	
-‰ΩúËÄÖÁ≠ÜË®ò:
+ß@™Ãµß∞O:
 	(1)reading/write Excel column from loading Config.ini to decide which sheet/column
 	(2)wriet log needs enhancement, even apply "sqlite" and "Pandas"
 '''
@@ -41,26 +44,24 @@ class BinExcelConverter:
 	
 	
 	#[section]: initial
-	def __init__(self, i, t):
-		self.i = i #inputPath
+	def __init__(self, s, t):
+		self.s = s #sourcePath
 		self.t = t #templatePath
 		self.tempFolder = os.getcwd() + "\\tempData\\" #tempPath to process data
 		self.resultFolder = os.getcwd() + "\\resultData\\" #resultFolder to save file
 		self.logFolder = os.getcwd() + "\\logData\\" #logFolder to save user log
 		self.supportFileExtension = { 
 			'xls':'Excel', 'csv':'Excel', 'xlsx':'Excel',
-			'bin':'Bin'				
+			'bin':'Bin'
 															} #supported file name extension
 		self.supportConvertingItem = ["ExcelToBin", "BinToExcel"] #supported Converting Item
 		self.convertingItem = "" #current converting Item:ExcelToBin/BinToExcel	
 		self.dataContent = "" #reading file to string from "readFileToString()"
 		self.status = 1 #keep the status (1=ok ; 9=error)
 		self.message = "" #keep the message
-		self.state = "" #keep the state		
-		self.defaultProgramSetting() #
-		
-		
-	
+		self.state = "" #keep the state
+		self.configExcelSetting = ""
+		self.defaultProgramSetting() #check program default setting
 
 	
 	
@@ -69,10 +70,21 @@ class BinExcelConverter:
 	def defaultProgramSetting(self):
 		config = ConfigParser.RawConfigParser()
 		config.read('Config.ini')
+		#default system folders
 		sectionDefaultFolder = config.items("DefaultSettingFolder")
 		for item in sectionDefaultFolder:
 			if not os.path.isdir(os.getcwd()+"\\"+item[1]):
 				os.mkdir(os.getcwd()+"\\"+item[1])
+		#defaut dynamic variable
+		if(self.configExcelSetting==""):
+			self.configExcelSetting = "ExcelSetting_Default"
+		sectionDefaultExcelSetting = config.items(self.configExcelSetting)
+		for item in sectionDefaultExcelSetting:
+			setattr(self, item[0], item[1])
+		print self.templatecolvalue
+		
+	
+	
 
 	#encapsulate validation functions:	
 	def validationEncapsulation(self):
@@ -81,13 +93,13 @@ class BinExcelConverter:
 		if(self.validateVariable()): #validate if input/template missing
 			if(self.validateFileExtension()): #validate file name extension
 				if(self.validateConvertingItem()): #validate converting item(BinToExcel/ExcelToBin)
-					if(self.validateFilePath()): #validate file existence (inputPath/templatePath)
+					if(self.validateFilePath()): #validate file existence (sourcePath/templatePath)
 						validationResult = True
 		return validationResult
 	
-	#check the inputPath/templatePath missing text.
+	#check the sourcePath/templatePath missing text.
 	def validateVariable(self):
-		if(len(self.i) == 0):
+		if(len(self.s) == 0):
 			self.status = 9
 			self.message += "miss data input: Source file path \n "
 			return False
@@ -98,15 +110,15 @@ class BinExcelConverter:
 		else:
 			return True
 			
-	#check the inputPath/templatePath match the supportFileExtension 
+	#check the sourcePath/templatePath match the supportFileExtension 
 	def validateFileExtension(self):
-		#search supportFileExtension to validate the filename extension of inputPath/templatePath
-		if(self.i.split('.')[1] and self.t.split('.')[1] in self.supportFileExtension):
+		#search supportFileExtension to validate the filename extension of sourcePath/templatePath
+		if(self.s.split('.')[1] and self.t.split('.')[1] in self.supportFileExtension):
 			return True
 		else:
 			self.status = 9
-			if(self.i.split('.')[1] not in self.supportFileExtension):
-				self.message += "system doesn't support file name extension: " + "." + self.i.split('.')[1] + "\n"
+			if(self.s.split('.')[1] not in self.supportFileExtension):
+				self.message += "system doesn't support file name extension: " + "." + self.s.split('.')[1] + "\n"
 			if(self.t.split('.')[1] not in self.supportFileExtension):
 				self.message += "system doesn't support file name extension: " + "." + self.t.split('.')[1] + "\n"
 			return False	
@@ -114,7 +126,7 @@ class BinExcelConverter:
 	#check the Data Converting request support or not
 	def validateConvertingItem(self):
 		#ConvertingItem=ExcelToBin
-		i_Type = self.supportFileExtension[self.i.split('.')[1]] #get input file type (Excel/Bin)
+		i_Type = self.supportFileExtension[self.s.split('.')[1]] #get input file type (Excel/Bin)
 		t_Type = self.supportFileExtension[self.t.split('.')[1]] #get template file type (Excel/Bin)
 		self.convertingItem = i_Type + "To" + t_Type #assign converting Item: ExcelToBin/BinToExcel
 		if(self.convertingItem in self.supportConvertingItem):
@@ -125,14 +137,14 @@ class BinExcelConverter:
 			self.convertingItem = ""			
 			return False	
 	
-	#check the inputPath/templatePath data exist or not
+	#check the sourcePath/templatePath data exist or not
 	def validateFilePath(self):
-		if(os.path.exists(self.i) and os.path.exists(self.t)): #validate inputFilePath/outputFilePath
+		if(os.path.exists(self.s) and os.path.exists(self.t)): #validate inputFilePath/outputFilePath
 			return True
 		else:
-			if(not os.path.exists(self.i)):
+			if(not os.path.exists(self.s)):
 				self.status = 9
-				self.message += "system doesn't find the FilePath: " + self.i + "\n"
+				self.message += "system doesn't find the FilePath: " + self.s + "\n"
 			if(not os.path.exists(self.t)):
 				self.status = 9
 				self.message += "system doesn't find the FilePath: " + self.t + "\n"
@@ -150,27 +162,29 @@ class BinExcelConverter:
 		self.writeLog()
 	#copy file to tempFolder:tempData
 	def copyAsTempData(self):
-		self.i = self.i.replace('/','\\')
+		self.s = self.s.replace('/','\\')
 		self.t = self.t.replace('/','\\')
-		#copy inputFile into tempFolder(tempData) and reset self.i			
-		copyfile(self.i, self.tempFolder + self.i.split('\\')[-1])
-		self.i = self.tempFolder + self.i.split('\\')[-1]
+		#copy inputFile into tempFolder(tempData) and reset self.s			
+		copyfile(self.s, self.tempFolder + self.s.split('\\')[-1])
+		self.s = self.tempFolder + self.s.split('\\')[-1]
 		#copy templateFile into tempFolder(tempData) and reset self.t			
 		copyfile(self.t, self.tempFolder + self.t.split('\\')[-1])
 		self.t = self.tempFolder + self.t.split('\\')[-1]	
 	
 	#read input File as a serial sequence of string value
 	def readFileToString(self):
+		sheet = self.sourcesheet
+		colValue = self.sourcecolvalue
 		if(self.convertingItem == "BinToExcel"): #read a "Bin" file
-			OpenFile = open(self.i, 'rb')
+			OpenFile = open(self.s, 'rb')
 			self.dataContent = BitArray(OpenFile,length=256)
 		elif(self.convertingItem == "ExcelToBin"): #read a "Excel" file
 			RowIndex = 2
 			RowMax = 65536
 			xlApp = win32com.client.Dispatch("Excel.Application")
-			workbook = xlApp.Workbooks.Open(self.i)
+			workbook = xlApp.Workbooks.Open(self.s)
 			while(RowIndex<RowMax):
-				if (xlApp.Range("C"+str(RowIndex),"C"+str(RowIndex)).Text == ""):
+				if (xlApp.Range(colValue+str(RowIndex),colValue+str(RowIndex)).Text == ""):
 					RowIndex = RowMax
 				else:
 					self.dataContent=self.dataContent+xlApp.Range("C"+str(RowIndex),"C"+str(RowIndex)).Text
@@ -193,19 +207,22 @@ class BinExcelConverter:
 		#message
 		self.message = "Finish the job, please check below path:\n"
 		self.message += self.resultFolder + '\n'
-		self.message += "soucePath:\n " + self.i + "\n"
-		self.message += "templatePath:\n " + self.t + "\n"
-		#self.deleteTempData()	
+		self.message += "soucePath:\n" + self.s + "\n"
+		self.message += "templatePath:\n" + self.t + "\n"
+		#self.deleteTempData()
 	
 	def binToExcel(self):
+		sheet = self.templatesheet
+		colValue = self.templatecolvalue
+		colBits = self.templatecolbits
 		xlApp = win32com.client.Dispatch("Excel.Application")
 		workbook = xlApp.Workbooks.Open(self.t)
 		RowIndex = 2
 		CurrentBit = 0
 		BitRange = 0
 		while(CurrentBit<int(len(self.dataContent))):
-			BitRange = int(xlApp.Range("B"+str(RowIndex),"B"+str(RowIndex)).Value)	
-			xlApp.Range("C"+str(RowIndex),"C"+str(RowIndex)).Value = self.dataContent[CurrentBit:CurrentBit+BitRange].bin					
+			BitRange = int(xlApp.Range(colBits+str(RowIndex),colBits+str(RowIndex)).Value)	
+			xlApp.Range(colValue+str(RowIndex),colValue+str(RowIndex)).Value = self.dataContent[CurrentBit:CurrentBit+BitRange].bin					
 			CurrentBit = CurrentBit + BitRange	
 			RowIndex=RowIndex+1
 		workbook.SaveAs(self.resultFolder)
@@ -224,7 +241,7 @@ class BinExcelConverter:
 		with open(self.resultFolder, 'wb') as f:
 			f.write(bytearray(int(i, 16) for i in HexArray))	
 	
-	#backup inputPath/templatePath file from tempData to backupData then delete it
+	#backup sourcePath/templatePath file from tempData to backupData then delete it
 	def backupData(self):
 		print ""
 		
