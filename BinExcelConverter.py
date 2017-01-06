@@ -2,14 +2,13 @@
 
 ''' 檔案資訊
 檔名:BinExcelConverter.py
-版本:version 1.00
+版本:version 1.03
 功能:A class to process BinToExcel and ExcelToBin
 作者:李俊鴻, Neil Lee
 時間:2016/12/26
 更新紀錄:(最新的在最上面)
-	=== Version 1.03 2017/1/4 updae ===
-	(1)replace class file from "BinExcelConverter.py" to "BinExcelConverter_final.py"
-	(2)add config dynamic function to determine excel column.
+	=== Version 1.03 2017/1/4 update ===
+	(1)add config dynamic function to determine excel column.
 	=== Version 1.02 2016/12/29 update ===
 	(1)modify "writeLog()" to have success & failed message.	
 	(2)new function "validationEncapsulation()" to encapsulate validation process.
@@ -47,9 +46,10 @@ class BinExcelConverter:
 	def __init__(self, s, t):
 		self.s = s #sourcePath
 		self.t = t #templatePath
-		self.tempFolder = os.getcwd() + "\\tempData\\" #tempPath to process data
+		self.processFolder = os.getcwd() + "\\processData\\" #processPath to process data
 		self.resultFolder = os.getcwd() + "\\resultData\\" #resultFolder to save file
 		self.logFolder = os.getcwd() + "\\logData\\" #logFolder to save user log
+		self.backupFolder = os.getcwd() + "\\backupData\\" #backupFolder to backup uploading files
 		self.supportFileExtension = { 
 			'xls':'Excel', 'csv':'Excel', 'xlsx':'Excel',
 			'bin':'Bin'
@@ -75,13 +75,12 @@ class BinExcelConverter:
 		for item in sectionDefaultFolder:
 			if not os.path.isdir(os.getcwd()+"\\"+item[1]):
 				os.mkdir(os.getcwd()+"\\"+item[1])
-		#defaut dynamic variable
+		#default dynamic variable
 		if(self.configExcelSetting==""):
 			self.configExcelSetting = "ExcelSetting_Default"
 		sectionDefaultExcelSetting = config.items(self.configExcelSetting)
 		for item in sectionDefaultExcelSetting:
-			setattr(self, item[0], item[1])
-		print self.templatecolvalue
+			setattr(self, item[0], item[1])		
 		
 	
 	
@@ -139,7 +138,7 @@ class BinExcelConverter:
 	
 	#check the sourcePath/templatePath data exist or not
 	def validateFilePath(self):
-		if(os.path.exists(self.s) and os.path.exists(self.t)): #validate inputFilePath/outputFilePath
+		if(os.path.exists(self.s) and os.path.exists(self.t)): #validate sourceFilePath/outputFilePath
 			return True
 		else:
 			if(not os.path.exists(self.s)):
@@ -156,20 +155,33 @@ class BinExcelConverter:
 	#[Section]: data processing functions
 	#encapsulate convertion functions
 	def convertingEncapsulation(self):
-		self.copyAsTempData()
+		self.s = self.s.replace('/','\\')
+		self.t = self.t.replace('/','\\')
+		self.copyAsBackupData()
+		self.copyAsProcessData()		
 		self.readFileToString()
 		self.convert()
 		self.writeLog()
-	#copy file to tempFolder:tempData
-	def copyAsTempData(self):
-		self.s = self.s.replace('/','\\')
-		self.t = self.t.replace('/','\\')
-		#copy inputFile into tempFolder(tempData) and reset self.s			
-		copyfile(self.s, self.tempFolder + self.s.split('\\')[-1])
-		self.s = self.tempFolder + self.s.split('\\')[-1]
-		#copy templateFile into tempFolder(tempData) and reset self.t			
-		copyfile(self.t, self.tempFolder + self.t.split('\\')[-1])
-		self.t = self.tempFolder + self.t.split('\\')[-1]	
+	#copy file to processFolder:processData
+	def copyAsProcessData(self):		
+		#copy sourceFile into processFolder(processData) and reset self.s			
+		copyfile(self.s, self.processFolder + self.s.split('\\')[-1])
+		self.s = self.processFolder + self.s.split('\\')[-1]
+		#copy templateFile into processFolder(processData) and reset self.t			
+		copyfile(self.t, self.processFolder + self.t.split('\\')[-1])
+		self.t = self.processFolder + self.t.split('\\')[-1]	
+	
+	#copy file to backupFolder:backupData
+	def copyAsBackupData(self):
+		strDateTime = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+		#copy sourceFile into backupFolder(backupData)	
+		self.sourceFileName = self.s.split('\\')[-1].split('.')[0] + "_" + strDateTime 
+		self.sourceFileExtension = self.s.split('\\')[-1].split('.')[1] 
+		copyfile(self.s, self.backupFolder + self.sourceFileName + "." + self.sourceFileExtension)
+		#copy templateFile into backupFolder(backupData)	
+		self.templateFileName = self.t.split('\\')[-1].split('.')[0] + "_" + strDateTime
+		self.templateFileExtension = self.t.split('\\')[-1].split('.')[1] 
+		copyfile(self.t, self.backupFolder + self.templateFileName  + "." + self.templateFileExtension)
 	
 	#read input File as a serial sequence of string value
 	def readFileToString(self):
@@ -209,7 +221,7 @@ class BinExcelConverter:
 		self.message += self.resultFolder + '\n'
 		self.message += "soucePath:\n" + self.s + "\n"
 		self.message += "templatePath:\n" + self.t + "\n"
-		#self.deleteTempData()
+		#self.deleteProcessData()
 	
 	def binToExcel(self):
 		sheet = self.templatesheet
@@ -228,7 +240,7 @@ class BinExcelConverter:
 		workbook.SaveAs(self.resultFolder)
 		xlApp.DisplayAlerts = 0
 		xlApp.Visible = 0
-		workbook.Close(0)	
+		workbook.Close(0)
 	
 	def excelToBin(self):
 		#excel string to Array
@@ -241,10 +253,6 @@ class BinExcelConverter:
 		with open(self.resultFolder, 'wb') as f:
 			f.write(bytearray(int(i, 16) for i in HexArray))	
 	
-	#backup sourcePath/templatePath file from tempData to backupData then delete it
-	def backupData(self):
-		print ""
-		
 	#have a operation log and write into a text file
 	def writeLog(self):
 		strDateTime = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
